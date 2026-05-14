@@ -131,8 +131,10 @@ platform :ios do
       destination: 'generic/platform=iOS',
       buildlog_path: 'buildlog'
     )
-
-    copy_artifacts(
+upload_to_testflight(
+  skip_waiting_for_build_processing: true
+)
+    copy_artifacts
       target_path: "artifacts",
       artifacts: ["*.mobileprovision", "*.ipa", "*.dSYM.zip"]
     )
