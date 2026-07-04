@@ -1,3 +1,15 @@
+before_all do
+  setup_ci if ENV['CI']
+  
+  create_keychain(
+    name: "fastlane_tmp_keychain",
+    password: "password",
+    default_keychain: true,
+    unlock: true,
+    timeout: 3600
+  ) if ENV['CI']
+end
+
 # This file contains the fastlane.tools configuration
 # You can find the documentation at https://docs.fastlane.tools
 #
@@ -160,14 +172,6 @@ platform :ios do
   lane :identifiers do
   
   setup_ci if ENV['CI']
-
-  create_keychain(
-    name: "fastlane_tmp_keychain",
-    password: "password",
-    default_keychain: true,
-    unlock: true,
-    timeout: 3600
-  ) if ENV['CI']
 
   ENV["MATCH_READONLY"] = false.to_s
 
