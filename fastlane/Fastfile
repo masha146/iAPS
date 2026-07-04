@@ -158,8 +158,20 @@ platform :ios do
 
   desc "Provision Identifiers and Certificates"
   lane :identifiers do
-    setup_ci if ENV['CI']
-    ENV["MATCH_READONLY"] = false.to_s
+    lane :identifiers do
+  setup_ci if ENV['CI']
+
+  create_keychain(
+    name: "fastlane_tmp_keychain",
+    password: "password",
+    default_keychain: true,
+    unlock: true,
+    timeout: 3600
+  ) if ENV['CI']
+
+  ENV["MATCH_READONLY"] = false.to_s
+
+
     
     app_store_connect_api_key(
       key_id: "#{FASTLANE_KEY_ID}",
