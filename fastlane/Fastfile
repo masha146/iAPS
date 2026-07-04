@@ -158,7 +158,7 @@ platform :ios do
 
   desc "Provision Identifiers and Certificates"
   lane :identifiers do
-    lane :identifiers do
+  
   setup_ci if ENV['CI']
 
   create_keychain(
