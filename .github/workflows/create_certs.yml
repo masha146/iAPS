@@ -70,7 +70,7 @@ jobs:
       - name: Check and create or update Distribution certificate and profiles if needed
         run: |
           echo "Running Fastlane certs lane..."
-          bundle _${{ env.BUNDLER_VER }}_ exec fastlane certs || true # ignore and continue on errors without annotating an exit code
+          bundle _${{ env.BUNDLER_VER }}_ exec fastlane certs
 
       - name: Check Distribution certificate and launch Nuke certificates if needed
         run: bundle _${{ env.BUNDLER_VER }}_ exec fastlane check_and_renew_certificates
@@ -103,56 +103,7 @@ jobs:
           fi
 
           # Check if vars.FORCE_NUKE_CERTS is not set to true
-          if [ vars.FORCE_NUKE_CERTS = "true" ]; then
-            echo "::warning::‼️ Nuking of certificates was forced because the repository variable FORCE_NUKE_CERTS is set to 'true'."
+          if [ "${{ vars.FORCE_NUKE_CERTS }}" = "true" ]; then
+            echo "::warning::FORCE_NUKE_CERTS is set but automatic certificate revocation is disabled for safety."
           fi
 
-  # Nuke Certs if needed, and if the repository variable ENABLE_NUKE_CERTS is set to 'true', or if FORCE_NUKE_CERTS is set to 'true', which will always force certs to be nuked
-  nuke_certs:
-      name: Nuke certificates
-      needs: [validate, create_certs]
-      runs-on: xcode-27
-      if: ${{ (needs.create_certs.outputs.new_certificate_needed == 'true' && vars.ENABLE_NUKE_CERTS == 'true') || vars.FORCE_NUKE_CERTS == 'true' }}
-      steps:
-        - name: Output from step id 'check_certs'
-          run: echo "new_certificate_needed=${{ needs.create_certs.outputs.new_certificate_needed }}"
-
-        - name: Checkout repository
-          uses: actions/checkout@v5
-
-        - name: Set special variables
-          env:
-            # APP_IDENTIFIER may be set as a secret (preferred) or a repository variable (fallback).
-            APP_IDENTIFIER_SECRET: ${{ secrets.APP_IDENTIFIER }}
-            APP_IDENTIFIER_VAR: ${{ vars.APP_IDENTIFIER }}
-          run: |
-            APP_ID="${APP_IDENTIFIER_SECRET:-$APP_IDENTIFIER_VAR}"
-            if [ -n "$APP_ID" ]; then
-              echo "APP_IDENTIFIER=$APP_ID" >> "$GITHUB_ENV"
-            fi
-
-        # Ensure compatible Bundler version for Fastlane (fastlane requires bundler < 3)
-        - name: Install Bundler 2.x
-          run: |
-            gem install bundler -v 2.7.2
-            echo "BUNDLER_VER=2.7.2" >> $GITHUB_ENV
-
-        - name: Install dependencies
-          run: bundle _${{ env.BUNDLER_VER }}_ install
-
-        - name: Run Fastlane nuke_certs
-          run: |
-            set -e # Set error immediately after this step if error occurs
-            bundle _${{ env.BUNDLER_VER }}_ exec fastlane nuke_certs
-
-        - name: Recreate Distribution certificate after nuking
-          run: |
-            set -e # Set error immediately after this step if error occurs
-            bundle _${{ env.BUNDLER_VER }}_ exec fastlane certs
-
-        - name: Add success annotations for nuke and certificate recreation
-          if: ${{ success() }}
-          run: |
-            echo "::warning::⚠️ All Distribution certificates and TestFlight profiles have been revoked and recreated."
-            echo "::warning::❗️ If you have other apps being distributed by GitHub Actions / Fastlane / TestFlight that does not renew certificates automatically, please run the '3. Create Certificates' workflow for each of these apps to allow these apps to be built."
-            echo "::warning::✅ But don't worry about your existing TestFlight builds, they will keep working!"

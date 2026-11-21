@@ -310,7 +310,7 @@ platform :ios do
   desc "Check Certificates and Trigger Workflow for Expired or Missing Certificates"
   lane :check_and_renew_certificates do
     setup_ci if ENV['CI']
-    nuke_certs
+    # Never revoke distribution certificates during a routine check.
     ENV["MATCH_READONLY"] = false.to_s
    
   
