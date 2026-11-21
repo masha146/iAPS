@@ -30,6 +30,10 @@ jobs:
         id: auto-build-enabled
         run: |
           echo "auto_build=false" >> $GITHUB_OUTPUT
+          # Build main automatically when the upstream sync pushes new commits.
+          if [ "${{ github.ref_name }}" = "main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "auto_build=true" >> $GITHUB_OUTPUT
+          fi
           if [ ! -z "${{ vars.AUTO_BUILD_BRANCHES }}" ]; then
             if echo ",${{ vars.AUTO_BUILD_BRANCHES }}," | grep -q ",${{ github.ref_name }},"; then
               echo "auto_build=true" >> $GITHUB_OUTPUT
