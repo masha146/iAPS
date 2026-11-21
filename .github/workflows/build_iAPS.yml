@@ -254,6 +254,9 @@ jobs:
         if: ${{ vars.SKIP_TESTFLIGHT_UPLOAD != 'true' }}
         run: bundle _${{ env.BUNDLER_VER }}_ exec fastlane release
         env:
+          # Use iTMSTransporter instead of altool, which reports a false failure
+          # after successfully uploading the IPA on the current Xcode runner.
+          FASTLANE_ITUNES_TRANSPORTER_USE_SHELL_SCRIPT: 'true'
           TEAMID: ${{ secrets.TEAMID }}
           GH_PAT: ${{ secrets.GH_PAT }}
           FASTLANE_KEY_ID: ${{ secrets.FASTLANE_KEY_ID }}
